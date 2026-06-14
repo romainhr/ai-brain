@@ -50,6 +50,21 @@ bd close <id>         # Complete work
 - If push fails, resolve and retry until it succeeds
 <!-- END BEADS INTEGRATION -->
 
+## Workflows multi-agente — routing de modelos (OBLIGATORIO)
+
+**Siempre que ejecutes un `Workflow`** (orquestación multi-agente), enruta cada `agent(...)`
+al modelo **más barato que resuelva bien su tarea**. Objetivo: **mayor rendimiento al menor coste**.
+Fija `model` de forma explícita en cada llamada — no dejes el modelo por defecto.
+
+| Modelo | Cuándo usarlo | Ejemplos |
+|---|---|---|
+| **`haiku`** | Tareas mecánicas y deterministas | editar JSON/markdown, renombrar/mover/borrar archivos, formatear, extracción/búsqueda acotada, sincronizar tablas |
+| **`sonnet`** | Tareas con criterio o varios pasos | redactar/editar prosa, instalar/configurar con manejo de errores, refactors locales, clasificación por taxonomía, research acotado |
+| **`opus`** | Razonamiento difícil o QA crítico | diseño/arquitectura, verificación adversarial/escéptica final, síntesis de muchas fuentes, decisiones de alto impacto |
+
+**Regla práctica:** el grueso del fan-out va en `haiku`; `sonnet` solo donde haga falta criterio;
+`opus` reservado a la fase de **verificación/síntesis** final. Si una tarea es ambigua entre dos
+niveles, prueba con el más barato y deja que la fase de verificación (`opus`) detecte fallos.
 
 ## Build & Test
 
