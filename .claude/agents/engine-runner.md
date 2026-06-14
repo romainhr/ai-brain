@@ -47,13 +47,13 @@ de log aparte (`2>"$ERR"`) y trabaja solo sobre stdout. Prefiere la salida JSON 
      EFFORT=""; [ -n "$REASONING_EFFORT" ] && EFFORT="-c model_reasoning_effort=\"$REASONING_EFFORT\""
      timeout 300 bash -lc "cat '$ENC' | codex exec --skip-git-repo-check $MODELFLAG $EFFORT" 2>"$ERR"
      ```
-   - **gemini:** (lee stdin; `-p` lleva solo una instrucción breve; `-o json` da salida limpia)
+   - **gemini:** (lee stdin; `-p` lleva solo una instrucción breve). **NO uses `-o json`**: cuelga
+     el CLI en este tier. Sin él, el stdout es el texto del modelo (que es el JSON pedido); los
+     banners van a stderr y ya los separas con `2>"$ERR"`.
      ```bash
      MODELFLAG=""; [ -n "$MODEL" ] && MODELFLAG="-m $MODEL"
-     timeout 300 bash -lc "cat '$ENC' | gemini --approval-mode yolo -o json $MODELFLAG -p 'Procesa el encargo de la entrada estándar y responde SOLO el JSON pedido.'" 2>"$ERR"
+     timeout 300 bash -lc "cat '$ENC' | gemini --approval-mode yolo $MODELFLAG -p 'Procesa el encargo de la entrada estándar y responde SOLO el JSON pedido.'" 2>"$ERR"
      ```
-     Con `-o json`, gemini devuelve un sobre `{"response": "...", "stats": {...}}`: toma `.response`
-     y dentro está el JSON del encargo.
    - **openrouter:** (API HTTP; REQUIERE `OPENROUTER_API_KEY`). Si la variable está vacía, NO llames
      a la API: falla limpiamente para que el orquestador haga fallback a Claude. Construye el payload
      con el ENCARGO como mensaje de usuario y haz el POST:
@@ -71,7 +71,8 @@ de log aparte (`2>"$ERR"`) y trabaja solo sobre stdout. Prefiere la salida JSON 
      La respuesta es `{"choices":[{"message":{"content":"..."}}]}`: el JSON del encargo está en
      `.choices[0].message.content`.
 3. **Extrae el JSON** del stdout (NO del log de stderr). Según el motor: codex → localiza el bloque
-   `{...}` o fence ```json en la salida; gemini → `.response`; openrouter → `.choices[0].message.content`.
+   `{...}` o fence ```json en la salida; gemini → el stdout ES el texto del modelo (recorta a las
+   llaves `{...}`); openrouter → `.choices[0].message.content`.
    Si el modelo lo envolvió en texto, recórtalo. Valida que esté bien formado y traiga los campos del
    esquema. Si algo va mal, revisa `"$ERR"` para diagnosticar (no para extraer datos).
 4. **Si el CLI falla** (exit≠0, timeout, o no hay JSON usable tras un reintento): NO inventes

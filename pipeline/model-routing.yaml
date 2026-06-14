@@ -54,10 +54,15 @@ engines:
     kind: cli
     command: gemini
     # El puente añade -p. Forma canónica de auto-aprobar: --approval-mode yolo (--yolo es alias).
-    # IMPORTANTE: NO uses 2>&1; los banners ("YOLO mode is enabled", "Ripgrep…") van a stderr y
-    # contaminan el JSON. Captura stderr aparte y usa -o json (salida estructurada limpia).
-    invoke: "gemini --approval-mode yolo -o json"
-    model: ""                       # vacío = default del CLI (familia Gemini 3.x; p. ej. 3.x Pro/Flash)
+    # IMPORTANTE: NO uses 2>&1 ni -o json:
+    #   - 2>&1 mezcla banners de stderr ("YOLO mode is enabled", "Ripgrep…") y rompe el JSON.
+    #   - -o json CUELGA el CLI en este tier (probado: sin -o json responde en segundos).
+    # Solución: captura stderr APARTE (2>"$ERR") y lee el JSON del stdout (texto del modelo).
+    invoke: "gemini --approval-mode yolo"
+    model: ""                       # vacío = default del CLI. OJO: el tier OAuth/Google One NO da
+                                    # acceso a 3.x Pro (ModelNotFoundError) y este CLI deja de
+                                    # servir peticiones el 2026-06-18 (migración a Antigravity CLI).
+                                    # No es deep research: es una llamada con grounding web.
     strengths: >
       Grounding/búsqueda web nativa y contexto enorme. Bueno para barridos amplios, Google/
       DeepMind y lectura de papers. Suscripción Google (sin coste por token).
