@@ -22,22 +22,44 @@ Obsidian. Tu trabajo es ejecutar, en una sola corrida, las **3 fases** del pipel
 2. Lee `pipeline/taxonomy.yaml` y `pipeline/schema.md` COMPLETOS. Son contratos estrictos:
    nunca inventes valores de faceta fuera de la taxonomía.
 3. Lee `pipeline/sources.yaml` para saber qué barrer y la ventana temporal (`window_hours`).
+   La config está organizada por **scout/experto** (clave `scouts:`), no por categoría plana.
 
 ---
 
-## FASE 1 — Research (cobertura amplia)
+## FASE 1 — Research (cobertura amplia, por expertos)
 
 Objetivo: **recall alto**. Capturar todo lo potencialmente relevante de las últimas ~48h.
 
-1. Recorre las 4 categorías de `sources.yaml` (`official`, `github`, `community`, `paper`).
-   Para cada una, usa `WebSearch` con sus `queries` y `WebFetch` sobre sus `feeds`. Acota
-   mentalmente a lo publicado dentro de `window_hours`.
-2. Si la skill `deep-research` está disponible y quieres mayor profundidad en un tema concreto,
-   puedes invocarla — pero no es obligatoria; las búsquedas directas bastan para el barrido.
-3. Vuelca TODOS los hallazgos crudos en `vault/00_Inbox/<fecha>-raw.md` como una lista. Por
-   hallazgo, una línea con: título, URL, categoría/source_type, y 1 frase de qué es. No filtres
-   por calidad todavía; sí descarta duplicados obvios y cosas claramente fuera de tema (IA no
-   relevante para devs).
+El barrido se reparte entre **8 agentes expertos de plataforma**, definidos en
+`.claude/agents/scout-*.md`. Cada uno sabe a qué fuentes/perfiles/repos ir y cómo conectarse:
+
+| Scout (`agentType`)      | Plataforma                         | `source_type` | Conexión |
+|--------------------------|------------------------------------|---------------|----------|
+| `scout-x-twitter`        | X / Twitter                        | community     | API X si hay token, si no web/Nitter |
+| `scout-github`           | GitHub (repos/releases)            | github        | `gh` CLI autenticada (API real) |
+| `scout-openai`           | OpenAI                             | official      | web (blog/changelog) |
+| `scout-google-deepmind`  | Google / DeepMind                  | official      | web (blog/docs) |
+| `scout-microsoft`        | Microsoft (Azure/Copilot/SK)       | official      | web + `gh` |
+| `scout-anthropic`        | Anthropic / Claude Code            | official      | web + `gh` |
+| `scout-research`         | arXiv / HF Papers / Papers w/ Code | paper         | web |
+| `scout-community`        | HN / Reddit / newsletters          | community     | web (HN Algolia API) |
+
+**Forma recomendada (workflow):** lanza el workflow `ai-news-pipeline` (`/workflows`), que hace el
+fan-out por estos expertos en paralelo vía `agentType` y devuelve los hallazgos ya en esquema.
+
+**Forma manual (sesión interactiva, sin workflow):** invoca cada experto con la tool `Agent`
+(`subagent_type: scout-<nombre>`), pasándole la fecha de hoy y la ventana. Si prefieres no
+delegar, recorre tú mismo las fuentes de cada scout en `sources.yaml` con `WebSearch`/`WebFetch`
+(y `gh` para GitHub). En todos los casos, acota a lo publicado dentro de `window_hours` y
+**verifica la fecha** de cada hallazgo.
+
+Si la skill `deep-research` está disponible y quieres mayor profundidad en un tema concreto,
+puedes invocarla — pero no es obligatoria.
+
+Vuelca TODOS los hallazgos crudos en `vault/00_Inbox/<fecha>-raw.md` como una lista. Por hallazgo,
+una línea con: título, URL, scout/source_type, y 1 frase de qué es. No filtres por calidad
+todavía; sí descarta duplicados obvios (el mismo lanzamiento visto por 2 scouts cuenta una vez) y
+cosas claramente fuera de tema (IA no relevante para devs).
 
 Cierra la fase con un conteo: "Fase 1: N hallazgos crudos en 00_Inbox".
 

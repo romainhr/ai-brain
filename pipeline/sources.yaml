@@ -1,77 +1,129 @@
-# Catálogo de fuentes para el barrido diario de novedades de IA.
-# El pipeline (Fase 1) recorre estas categorías con WebSearch/WebFetch acotado a las
-# últimas ~24-48h. No es exhaustivo ni cerrado: las queries genéricas complementan
-# las fuentes nombradas. Añade/quita fuentes según lo que resulte útil.
+# Catálogo de fuentes para el barrido diario de novedades de IA — organizado por EXPERTO/scout.
+# El pipeline (Fase 1) hace fan-out: un agente experto por plataforma (definidos en
+# .claude/agents/scout-*.md). Cada scout LEE su entrada aquí al arrancar para saber a qué
+# fuentes/perfiles/repos ir. No es exhaustivo ni cerrado: las queries complementan los feeds.
+# Esta es la FUENTE DE VERDAD editable — añade/quita perfiles y repos según lo que resulte útil.
+#
+# Mapeo experto -> source_type (taxonomía):
+#   x_twitter, community -> community
+#   github               -> github
+#   openai, google_deepmind, microsoft, anthropic -> official
+#   research             -> paper
 
-version: 1
+version: 2
 
 # Ventana temporal por defecto para considerar algo "novedad".
 window_hours: 48
 
-categories:
+scouts:
 
-  official:           # anuncios de vendors (source_type: official)
-    label: "Anuncios oficiales"
-    feeds:
-      - name: Anthropic News
-        url: https://www.anthropic.com/news
-      - name: OpenAI News
-        url: https://openai.com/news/
-      - name: Google AI / DeepMind Blog
-        url: https://blog.google/technology/ai/
-      - name: Meta AI Blog
-        url: https://ai.meta.com/blog/
-      - name: Mistral News
-        url: https://mistral.ai/news/
-      - name: Hugging Face Blog
-        url: https://huggingface.co/blog
+  x_twitter:                       # agente: scout-x-twitter  (source_type: community)
+    label: "X / Twitter"
+    connection: "API de X si X_BEARER_TOKEN está definido (fechas exactas); si no, web/Nitter + WebSearch"
+    accounts:
+      labs:     ["@OpenAI", "@OpenAIDevs", "@AnthropicAI", "@GoogleDeepMind", "@GoogleAI", "@googleaidevs", "@MistralAI", "@xai", "@MSFTResearch", "@huggingface", "@ClementDelangue"]
+      people:   ["@sama", "@demishassabis", "@karpathy", "@ylecun", "@_philschmid", "@_akhaliq", "@arankomatsuzaki", "@swyx", "@simonw"]
+      tooling:  ["@claudeai", "@alexalbert__", "@cursor_ai", "@githubcopilot", "@code", "@hwchase17", "@jerryjliu0", "@rauchg", "@amasad", "@ollama"]
     queries:
-      - "Anthropic Claude new model OR feature announcement"
-      - "OpenAI new model OR API feature release"
-      - "Google Gemini release update"
-      - "new LLM released this week"
+      - "Claude Code skill OR plugin"
+      - "new MCP server"
+      - "new LLM release open weights"
+      - "AI coding agent launch"
 
-  github:             # repos / releases / herramientas (source_type: github)
-    label: "GitHub / herramientas"
+  github:                          # agente: scout-github  (source_type: github)
+    label: "GitHub"
+    connection: "gh CLI autenticada (API real, fechas exactas) + WebFetch a trending"
+    anchor_repos:
+      - anthropics/claude-code
+      - openai/codex
+      - openai/openai-python
+      - modelcontextprotocol/servers
+      - modelcontextprotocol/python-sdk
+      - microsoft/semantic-kernel
+      - microsoft/autogen
+      - langchain-ai/langchain
+      - run-llama/llama_index
+      - ggerganov/llama.cpp
+      - vllm-project/vllm
+      - huggingface/transformers
+      - ollama/ollama
+      - BerriAI/litellm
+    trending:
+      - https://github.com/trending?since=daily
+      - https://github.com/trending/python?since=daily
+      - https://github.com/trending/typescript?since=daily
+    search_queries:                # usar con: gh search repos "<q>" --sort updated
+      - "mcp server"
+      - "claude code skill OR plugin"
+      - "ai agent framework"
+      - "llm eval"
+
+  openai:                          # agente: scout-openai  (source_type: official)
+    label: "OpenAI"
     feeds:
-      - name: GitHub Trending (Python)
-        url: https://github.com/trending/python?since=daily
-      - name: GitHub Trending (TypeScript)
-        url: https://github.com/trending/typescript?since=daily
-      - name: GitHub Trending (general)
-        url: https://github.com/trending?since=daily
+      - https://openai.com/news/
+      - https://openai.com/index/
+      - https://platform.openai.com/docs/changelog
+      - https://platform.openai.com/docs/models
+      - https://status.openai.com/
+    anchor_repos: [openai/openai-python, openai/openai-node, openai/codex, openai/openai-cookbook]
+    x: ["@OpenAIDevs", "@OpenAI"]
+
+  google_deepmind:                 # agente: scout-google-deepmind  (source_type: official)
+    label: "Google / DeepMind"
+    feeds:
+      - https://deepmind.google/discover/blog/
+      - https://blog.google/technology/ai/
+      - https://developers.googleblog.com/en/search/?product_categories=AI
+      - https://ai.google.dev/gemini-api/docs/changelog
+      - https://cloud.google.com/vertex-ai/docs/release-notes
+    x: ["@GoogleDeepMind", "@GoogleAI", "@googleaidevs", "@demishassabis"]
+
+  microsoft:                       # agente: scout-microsoft  (source_type: official)
+    label: "Microsoft"
+    feeds:
+      - https://devblogs.microsoft.com/semantic-kernel/
+      - https://devblogs.microsoft.com/dotnet/
+      - https://azure.microsoft.com/en-us/blog/
+      - https://www.microsoft.com/en-us/research/blog/
+      - https://github.blog/changelog/
+    anchor_repos: [microsoft/semantic-kernel, microsoft/autogen, microsoft/agent-framework, microsoft/markitdown]
+    x: ["@MSFTResearch", "@githubcopilot", "@code"]
+
+  anthropic:                       # agente: scout-anthropic  (source_type: official)
+    label: "Anthropic"
+    feeds:
+      - https://www.anthropic.com/news
+      - https://docs.anthropic.com/en/release-notes/api
+      - https://docs.anthropic.com/en/release-notes/claude-apps
+      - https://docs.anthropic.com/en/docs/claude-code
+    anchor_repos: [anthropics/claude-code, anthropics/anthropic-sdk-python, anthropics/anthropic-sdk-typescript, anthropics/claude-cookbook]
+    x: ["@AnthropicAI", "@claudeai", "@alexalbert__"]
+
+  research:                        # agente: scout-research  (source_type: paper)
+    label: "Research / Papers"
+    feeds:
+      - https://huggingface.co/papers
+      - https://arxiv.org/list/cs.AI/recent
+      - https://arxiv.org/list/cs.CL/recent
+      - https://arxiv.org/list/cs.LG/recent
+      - https://paperswithcode.com/latest
     queries:
-      - "new MCP server released"
-      - "new Claude Code skill OR plugin"
-      - "new AI coding agent tool github"
-      - "new AI developer tool launch"
-      - "trending AI agent framework github"
+      - "notable LLM agent paper this week"
+      - "new RAG technique arxiv"
+      - "memory for LLM agents paper"
+      - "agent harness OR orchestration paper"
 
-  community:          # HN, Reddit, X, newsletters (source_type: community)
-    label: "Comunidad / redes"
+  community:                       # agente: scout-community  (source_type: community)
+    label: "Comunidad"
     feeds:
-      - name: Hacker News (front)
-        url: https://news.ycombinator.com/
-      - name: r/LocalLLaMA
-        url: https://www.reddit.com/r/LocalLLaMA/top/?t=day
-      - name: r/ClaudeAI
-        url: https://www.reddit.com/r/ClaudeAI/top/?t=day
-      - name: r/MachineLearning
-        url: https://www.reddit.com/r/MachineLearning/top/?t=day
+      - https://news.ycombinator.com/
+      - "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=AI&numericFilters=points%3E50"
+      - https://www.reddit.com/r/LocalLLaMA/top/?t=day
+      - https://www.reddit.com/r/ClaudeAI/top/?t=day
+      - https://www.reddit.com/r/MachineLearning/top/?t=day
+    newsletters: ["Latent Space", "The Rundown AI", "Ben's Bites", "TLDR AI"]
     queries:
       - "Hacker News AI tool launch today"
       - "LocalLLaMA new model OR tool"
       - "AI developer newsletter this week highlights"
-
-  paper:              # investigación (source_type: paper)
-    label: "Papers / research"
-    feeds:
-      - name: arXiv cs.AI (recent)
-        url: https://arxiv.org/list/cs.AI/recent
-      - name: arXiv cs.CL (recent)
-        url: https://arxiv.org/list/cs.CL/recent
-      - name: Papers with Code (latest)
-        url: https://paperswithcode.com/latest
-    queries:
-      - "notable AI paper this week LLM agents"
-      - "new technique RAG OR fine-tuning paper arxiv"

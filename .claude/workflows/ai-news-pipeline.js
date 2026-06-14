@@ -1,8 +1,8 @@
 export const meta = {
   name: 'ai-news-pipeline',
-  description: 'Barrido diario AI Brain: research fan-out (4 categorías) -> dedup -> clasificación por taxonomía',
+  description: 'Barrido diario AI Brain: research fan-out por expertos de plataforma -> dedup -> clasificación por taxonomía',
   phases: [
-    { title: 'Research', detail: 'un agente por categoría de fuente (official/github/community/paper), ventana 48h' },
+    { title: 'Research', detail: 'un agente experto por plataforma (x-twitter, github, openai, google-deepmind, microsoft, anthropic, research, community), ventana 48h' },
     { title: 'Triage', detail: 'clasificar y redactar nota para cada hallazgo nuevo en ventana' },
   ],
 }
@@ -78,21 +78,27 @@ const CLASSIFY_SCHEMA = {
 }
 
 phase('Research')
-const CATS = [
-  { key: 'official', q: 'Anthropic/OpenAI/Google/Meta/Mistral/HuggingFace anuncios oficiales de modelos o features' },
-  { key: 'github', q: 'nuevos MCP servers, skills/plugins de Claude Code o Codex, agentes de coding, herramientas dev en GitHub trending/releases' },
-  { key: 'community', q: 'Hacker News, r/LocalLLaMA, r/ClaudeAI, newsletters: lanzamientos de herramientas/modelos de IA' },
-  { key: 'paper', q: 'arXiv cs.AI/cs.CL y Papers with Code: papers notables de agentes LLM, RAG, memoria, harness, técnicas' },
+// Fan-out por EXPERTO de plataforma. Cada uno es un subagent en .claude/agents/ que ya sabe
+// a qué fuentes/perfiles/repos ir y cómo conectarse. El prompt aquí es solo el encargo del día;
+// la expertise vive en el system prompt del agente (agentType).
+const SCOUTS = [
+  { type: 'scout-x-twitter', label: 'x-twitter', enc: 'novedades de IA para devs circulando en X/Twitter (cuentas de labs, tooling, investigadores)' },
+  { type: 'scout-github', label: 'github', enc: 'repos/releases nuevos en GitHub: agentes, MCP servers, skills/plugins, frameworks, herramientas dev (usa gh CLI para fechas exactas)' },
+  { type: 'scout-openai', label: 'openai', enc: 'novedades oficiales de OpenAI: modelos, API/Responses, Codex, changelog de plataforma' },
+  { type: 'scout-google-deepmind', label: 'google-deepmind', enc: 'novedades de Google/DeepMind: Gemini, Gemma, Google AI/Developers, Vertex, papers DeepMind' },
+  { type: 'scout-microsoft', label: 'microsoft', enc: 'novedades de Microsoft: Azure AI/Foundry, Copilot, Semantic Kernel, AutoGen/Agent Framework' },
+  { type: 'scout-anthropic', label: 'anthropic', enc: 'novedades de Anthropic: modelos Claude, Claude Code, Agent SDK, API/changelog, MCP' },
+  { type: 'scout-research', label: 'research', enc: 'papers notables con valor práctico: arXiv cs.AI/cs.CL/cs.LG, HF Papers, Papers with Code' },
+  { type: 'scout-community', label: 'community', enc: 'lo que destaca la comunidad: Hacker News, r/LocalLLaMA, r/ClaudeAI, r/MachineLearning, newsletters' },
 ]
 
-const raw = (await parallel(CATS.map(c => () =>
+const raw = (await parallel(SCOUTS.map(s => () =>
   agent(
-    `Eres un scout de research del "AI Brain". Hoy es ${TODAY}. Categoria: ${c.key}.
-Tarea: con WebSearch (y WebFetch si hace falta), encuentra novedades de IA para desarrolladores publicadas DENTRO de las ultimas ${WINDOW} horas (aprox. ${TODAY} y los 2 dias previos). Tema: ${c.q}.
-Prioriza RECALL alto pero verifica la FECHA de publicacion de cada hallazgo: marca in_window=true SOLO si realmente cae en la ventana. Descarta IA no relevante para devs.
-Para cada hallazgo: title, url real (verificada, no inventada), source_type='${c.key}', vendor_guess, one_liner (1 frase), published_date (YYYY-MM-DD o unknown), in_window.
-Devuelve hasta 12 hallazgos.`,
-    { label: `research:${c.key}`, phase: 'Research', schema: RAW_SCHEMA }
+    `Hoy es ${TODAY}. Ventana: últimas ${WINDOW} horas (≈ ${TODAY} y los 2 días previos).
+Encargo: ${s.enc}.
+Aplica tu método experto: ve a tus fuentes, prioriza RECALL alto pero VERIFICA la fecha de cada hallazgo y marca in_window=true SOLO si cae en la ventana. Descarta IA no relevante para devs y duplicados obvios entre tus propias fuentes.
+Devuelve los hallazgos según tu contrato de salida (title, url real verificada, source_type, vendor_guess, one_liner en español, published_date YYYY-MM-DD o "unknown", in_window).`,
+    { agentType: s.type, label: `research:${s.label}`, phase: 'Research', schema: RAW_SCHEMA }
   )
 ))).filter(Boolean)
 
