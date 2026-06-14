@@ -32,5 +32,5 @@ related: ["[[_Home]]"]
 - [[que-es-rag]] — recuperación aumentada y GraphRAG.
 
 ---
-*Cómo se relaciona con el resto:* las notas de [[10_Daily]] capturan novedades del día; cada item
+*Cómo se relaciona con el resto:* las notas diarias (carpeta `10_Daily/`) capturan novedades del día; cada item
 de `20_Items/` debería enlazar a 1-2 fundamentos de aquí para enriquecer el grafo consultable.

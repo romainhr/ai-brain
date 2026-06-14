@@ -29,7 +29,9 @@ para no consumir crédito de Agent SDK. Luego graphify reconstruye el grafo a pa
 | `vault/10_Daily/` | Nota índice diaria `YYYY-MM-DD.md` |
 | `vault/20_Items/` | Una nota por novedad — el grueso del cerebro |
 | `vault/30_MOC/` | Maps of Content (índices vivos por categoría) |
+| `vault/40_Foundations/` | Capa evergreen: fundamentos conceptuales (qué es IA/LLM/agente/MCP/RAG/harness, glosario) |
 | `vault/_templates/` | Plantillas de nota |
+| `vault/_taxonomy.md` | Espejo navegable de la taxonomía (fuente de verdad: pipeline/taxonomy.yaml) |
 | `pipeline/` | `taxonomy.yaml`, `sources.yaml`, `schema.md` (config del pipeline) |
 | `scripts/` | `rebuild-graph.ps1` + `MCP-SETUP.md` (integración graphify) |
 | `vault/graphify-out/` | Outputs de graphify (`graph.json`/`.html`, `GRAPH_REPORT.md`) — regenerable, gitignored |
