@@ -1,0 +1,77 @@
+# Catálogo de fuentes para el barrido diario de novedades de IA.
+# El pipeline (Fase 1) recorre estas categorías con WebSearch/WebFetch acotado a las
+# últimas ~24-48h. No es exhaustivo ni cerrado: las queries genéricas complementan
+# las fuentes nombradas. Añade/quita fuentes según lo que resulte útil.
+
+version: 1
+
+# Ventana temporal por defecto para considerar algo "novedad".
+window_hours: 48
+
+categories:
+
+  official:           # anuncios de vendors (source_type: official)
+    label: "Anuncios oficiales"
+    feeds:
+      - name: Anthropic News
+        url: https://www.anthropic.com/news
+      - name: OpenAI News
+        url: https://openai.com/news/
+      - name: Google AI / DeepMind Blog
+        url: https://blog.google/technology/ai/
+      - name: Meta AI Blog
+        url: https://ai.meta.com/blog/
+      - name: Mistral News
+        url: https://mistral.ai/news/
+      - name: Hugging Face Blog
+        url: https://huggingface.co/blog
+    queries:
+      - "Anthropic Claude new model OR feature announcement"
+      - "OpenAI new model OR API feature release"
+      - "Google Gemini release update"
+      - "new LLM released this week"
+
+  github:             # repos / releases / herramientas (source_type: github)
+    label: "GitHub / herramientas"
+    feeds:
+      - name: GitHub Trending (Python)
+        url: https://github.com/trending/python?since=daily
+      - name: GitHub Trending (TypeScript)
+        url: https://github.com/trending/typescript?since=daily
+      - name: GitHub Trending (general)
+        url: https://github.com/trending?since=daily
+    queries:
+      - "new MCP server released"
+      - "new Claude Code skill OR plugin"
+      - "new AI coding agent tool github"
+      - "new AI developer tool launch"
+      - "trending AI agent framework github"
+
+  community:          # HN, Reddit, X, newsletters (source_type: community)
+    label: "Comunidad / redes"
+    feeds:
+      - name: Hacker News (front)
+        url: https://news.ycombinator.com/
+      - name: r/LocalLLaMA
+        url: https://www.reddit.com/r/LocalLLaMA/top/?t=day
+      - name: r/ClaudeAI
+        url: https://www.reddit.com/r/ClaudeAI/top/?t=day
+      - name: r/MachineLearning
+        url: https://www.reddit.com/r/MachineLearning/top/?t=day
+    queries:
+      - "Hacker News AI tool launch today"
+      - "LocalLLaMA new model OR tool"
+      - "AI developer newsletter this week highlights"
+
+  paper:              # investigación (source_type: paper)
+    label: "Papers / research"
+    feeds:
+      - name: arXiv cs.AI (recent)
+        url: https://arxiv.org/list/cs.AI/recent
+      - name: arXiv cs.CL (recent)
+        url: https://arxiv.org/list/cs.CL/recent
+      - name: Papers with Code (latest)
+        url: https://paperswithcode.com/latest
+    queries:
+      - "notable AI paper this week LLM agents"
+      - "new technique RAG OR fine-tuning paper arxiv"

@@ -1,0 +1,100 @@
+# Vocabulario controlado de etiquetas (FUENTE DE VERDAD)
+# El pipeline DEBE elegir valores SOLO de estas listas. Si una novedad no encaja en
+# ningún término existente, NO se inventa un tag: se añade a `candidates` al final y se
+# usa el término más cercano provisionalmente. Revisar `candidates` periódicamente para
+# promover términos nuevos a la lista oficial.
+
+version: 1
+
+facets:
+
+  # Qué clase de cosa es. Una sola por nota (la dominante).
+  type:
+    - model        # un modelo (LLM, embeddings, visión, voz...)
+    - tool         # herramienta/CLI/app independiente
+    - plugin       # extensión de un host (Obsidian, VSCode, etc.)
+    - harness      # andamiaje agéntico (Claude Code, agent frameworks de ejecución)
+    - skill        # skill / slash-command para un agente
+    - rule         # rules / system prompts / guías de comportamiento
+    - mcp          # MCP server o cliente
+    - framework    # librería/SDK para construir (LangChain, LlamaIndex...)
+    - agent        # un agente o producto agéntico concreto
+    - dataset      # conjunto de datos
+    - benchmark    # benchmark / leaderboard / evaluación
+    - paper        # publicación de investigación
+    - service      # API/servicio gestionado (hosting, inferencia, etc.)
+    - technique    # patrón/método (RAG, prompt eng., fine-tuning approach...)
+
+  # Quién lo produce. Lista abierta-controlada: añadir nuevos vendors aquí.
+  vendor:
+    - anthropic
+    - openai
+    - google
+    - meta
+    - mistral
+    - xai
+    - deepseek
+    - qwen
+    - microsoft
+    - amazon
+    - nvidia
+    - huggingface
+    - cohere
+    - community     # open-source / individuo / sin vendor corporativo
+    - unknown
+
+  # Dominio de aplicación. Multivaluada.
+  domain:
+    - coding        # asistencia a desarrollo / generación de código
+    - agents        # agentes autónomos / orquestación
+    - rag           # retrieval-augmented generation / búsqueda
+    - multimodal    # combinación de modalidades
+    - voice         # audio / TTS / STT
+    - vision        # imagen / video
+    - infra         # inferencia, serving, despliegue, hardware
+    - eval          # evaluación, observabilidad, testing de IA
+    - data          # ingestión, pipelines, etiquetado de datos
+    - security      # seguridad, prompt injection, guardrails
+    - productivity  # asistentes generales / automatización personal
+
+  # Ecosistema/host al que pertenece o con el que integra. Multivaluada.
+  ecosystem:
+    - claude-code
+    - cursor
+    - vscode
+    - jetbrains
+    - windsurf
+    - copilot
+    - langchain
+    - llamaindex
+    - obsidian
+    - n8n
+    - zapier
+    - ollama
+    - huggingface
+    - standalone    # no atado a un host concreto
+
+  # Estado de madurez. Una sola.
+  maturity:
+    - announced     # anunciado, aún no disponible
+    - preview       # beta / acceso anticipado / research preview
+    - ga            # generalmente disponible
+    - deprecated    # en desuso / reemplazado
+
+  # De dónde salió la captura. Una sola.
+  source_type:
+    - official      # blog/changelog del vendor
+    - github        # repo / release
+    - community     # HN, Reddit, X, newsletter, blog
+    - paper         # arXiv / Papers with Code
+
+  # Qué tan accionable es para MIS proyectos. Una sola. (Criterio del usuario)
+  relevance:
+    - core          # directamente útil, evaluar adoptar pronto
+    - experimental  # prometedor, vale la pena probar
+    - watch         # interesante, solo seguir de lejos
+
+# Términos propuestos por el pipeline que aún no están en las listas oficiales.
+# Formato sugerido por entrada: "<faceta>: <término>  # primera vez visto YYYY-MM-DD, ejemplo"
+candidates:
+  - "vendor: moonshot  # primera vez visto 2026-06-13, Kimi K2.7-Code (Moonshot AI). Usado 'community' provisionalmente."

@@ -1,0 +1,20 @@
+# Outputs de graphify (regenerables)
+/graph/
+vault/graphify-out/
+
+# Obsidian (config local de la app, no del contenido)
+vault/.obsidian/workspace*.json
+vault/.obsidian/cache
+vault/.trash/
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Entornos / secretos
+.env
+*.key
+
+# Claude Code (config local de máquina)
+.claude/settings.local.json
