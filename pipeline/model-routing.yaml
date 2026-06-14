@@ -3,10 +3,14 @@
 # research y cada hallazgo de triage), el MOTOR de mayor CALIDAD. Es dinámico: el router
 # decide en runtime según la naturaleza real de la tarea/hallazgo de hoy.
 #
-# Mecanismo: los motores Claude corren nativos (agent + model). Los motores CLI externos
-# (codex, gemini) corren vía el agente puente `.claude/agents/engine-runner.md`, que los
-# invoca por Bash dentro del repo y estructura su salida. Como corren en el repo, los CLIs
+# Mecanismo: los motores Claude corren nativos (agent + model). Los motores externos —CLI
+# (codex, gemini) y API (openrouter)— corren vía el agente puente `.claude/agents/engine-runner.md`,
+# que los invoca por Bash dentro del repo y estructura su salida. Como corren en el repo, los CLIs
 # externos pueden LEER ellos mismos sources.yaml / taxonomy.yaml / los .md de los scouts.
+#
+# Coste: claude-* consume el plan de Claude; codex/gemini van por suscripción plana (0 tokens de
+# plan) y openrouter:free es gratuito (requiere OPENROUTER_API_KEY). Preferir los de coste cero
+# cuando la calidad lo permita, para estirar los tokens de Claude.
 
 version: 1
 
@@ -34,7 +38,14 @@ engines:
     command: codex
     # El encargo se pasa por stdin; -m es opcional (vacío = default configurado en codex).
     invoke: "codex exec --skip-git-repo-check"
-    model: ""                       # ej. gpt-5.1-codex / gpt-5.1 / o3 (déjalo vacío para usar tu default)
+    model: ""                       # vacío = default del CLI (hoy gpt-5.5). Modelos disponibles
+                                    # (verificados en ~/.codex/models_cache.json):
+                                    #   gpt-5.5       frontier (coding/research complejo)
+                                    #   gpt-5.4       coding cotidiano sólido
+                                    #   gpt-5.4-mini  pequeño/rápido/barato (tareas simples)
+    reasoning_effort: ""            # low|medium|high|xhigh (vacío = default medium). El puente lo
+                                    # pasa como: -c model_reasoning_effort="<valor>". Súbelo para
+                                    # tareas difíciles; bájalo para abaratar/acelerar.
     strengths: >
       Fuerte en código y razonamiento; ecosistema OpenAI. Bueno para analizar repos, releases
       de OpenAI/Codex y temas de ingeniería. Suscripción ChatGPT (sin coste por token).
@@ -42,25 +53,52 @@ engines:
   gemini:
     kind: cli
     command: gemini
-    # El puente añade -p; --yolo evita prompts de aprobación en headless.
-    invoke: "gemini --yolo"
-    model: ""                       # ej. gemini-3-pro / gemini-2.5-pro (vacío = default)
+    # El puente añade -p. Forma canónica de auto-aprobar: --approval-mode yolo (--yolo es alias).
+    # IMPORTANTE: NO uses 2>&1; los banners ("YOLO mode is enabled", "Ripgrep…") van a stderr y
+    # contaminan el JSON. Captura stderr aparte y usa -o json (salida estructurada limpia).
+    invoke: "gemini --approval-mode yolo -o json"
+    model: ""                       # vacío = default del CLI (familia Gemini 3.x; p. ej. 3.x Pro/Flash)
     strengths: >
       Grounding/búsqueda web nativa y contexto enorme. Bueno para barridos amplios, Google/
       DeepMind y lectura de papers. Suscripción Google (sin coste por token).
 
-# Pistas para el router (NO son reglas duras: el router decide con criterio de CALIDAD).
+  openrouter:
+    kind: api
+    # API HTTP (no CLI). El puente invoca por curl. REQUIERE la variable OPENROUTER_API_KEY;
+    # si no está definida, este motor NO está disponible -> el router debe evitarlo y usar Claude.
+    invoke: 'curl -s --max-time 120 https://openrouter.ai/api/v1/chat/completions -H "Authorization: Bearer $OPENROUTER_API_KEY" -H "Content-Type: application/json" -d @-'
+    # Modelos gratuitos (sufijo :free). Lista volátil; verifícala con
+    #   curl -s https://openrouter.ai/api/v1/models | jq -r '.data[].id' | grep ':free'
+    model: "qwen/qwen3-coder:free"  # buen default free para coding; alternativas en models_free
+    models_free:
+      - qwen/qwen3-coder:free
+      - openai/gpt-oss-120b:free
+      - nvidia/nemotron-3-super-120b-a12b:free
+      - nvidia/nemotron-3-ultra-550b-a55b:free
+      - meta-llama/llama-3.3-70b-instruct:free
+    notes: >
+      Coste cero pero con RATE LIMITS bajos y variabilidad de disponibilidad/calidad. Úsalo para
+      tareas auto-contenidas de alto volumen. SIEMPRE con fallback a Claude si falla o agota timeout.
+    strengths: >
+      Acceso gratuito a modelos open-weights potentes (Qwen3-Coder, GPT-OSS, Nemotron, Llama).
+      Ideal para descargar trabajo del plan de Claude cuando la fiabilidad estricta no es crítica.
+
+# Pistas para el router. Objetivo doble: CALIDAD del resultado y ESTIRAR los tokens del plan de
+# Claude. Regla de coste: si un motor de suscripción/gratuito (codex, gemini, openrouter) cubre
+# bien la tarea, prefiérelo sobre Claude; reserva claude-* para juicio fino y verificación.
 routing_hints:
   research:
     - "scout-github depende de la CLI 'gh': prefiere claude-* (la tiene nativa) salvo razón fuerte."
     - "scout-google-deepmind y scout-research encajan bien con gemini (grounding, contexto, papers)."
     - "scout-openai encaja bien con codex (ecosistema OpenAI)."
     - "scout-anthropic conviene en claude-* (conoce mejor Claude Code / el ecosistema)."
+    - "Trabajo voluminoso y auto-contenido (resumir/extraer en lote) -> codex/gemini, u openrouter:free si hay OPENROUTER_API_KEY."
     - "Si dudas o la verificación de fecha es delicada, usa claude-sonnet (fiable y nativo)."
   triage:
     - "Clasificación ambigua o de alto matiz -> claude-opus."
     - "Papers -> gemini o claude-opus; herramientas/código u OpenAI -> codex."
+    - "Lotes grandes de casos claros -> codex/gemini/openrouter:free (coste cero) con fallback a claude-sonnet."
     - "Casos claros y rápidos -> claude-sonnet."
 
 # Para desactivar el enrutamiento y forzar todo a un motor (debug), el workflow acepta
-# args.forceEngine = "claude-sonnet" | "claude-opus" | "codex" | "gemini".
+# args.forceEngine = "claude-sonnet" | "claude-opus" | "codex" | "gemini" | "openrouter".

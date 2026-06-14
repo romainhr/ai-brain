@@ -53,18 +53,44 @@ bd close <id>         # Complete work
 ## Workflows multi-agente — routing de modelos (OBLIGATORIO)
 
 **Siempre que ejecutes un `Workflow`** (orquestación multi-agente), enruta cada `agent(...)`
-al modelo **más barato que resuelva bien su tarea**. Objetivo: **mayor rendimiento al menor coste**.
-Fija `model` de forma explícita en cada llamada — no dejes el modelo por defecto.
+a la opción **más barata que resuelva bien su tarea**. Objetivo: **estirar los tokens de plan de
+Claude** descargando todo lo posible a motores de coste cero o de suscripción plana, y reservar
+Claude para lo crítico. Fija el motor/modelo de forma explícita — no dejes el modelo por defecto.
 
-| Modelo | Cuándo usarlo | Ejemplos |
+### Principio de coste (de más barato a más caro para *tu* plan)
+
+1. **OpenRouter `:free`** y **Codex/Gemini CLI** → **coste cero o suscripción plana** (no gastan
+   tokens de tu plan de Claude). Prefiérelos para el grueso del trabajo cuando la calidad alcance.
+2. **Claude nativo** (`haiku` < `sonnet` < `opus`) → consume tu plan. Resérvalo para juicio fino,
+   coherencia con instrucciones/taxonomía y la **verificación/síntesis final**.
+
+> Heurística: deriva fan-out amplio y tareas auto-contenidas a CLIs externos / OpenRouter free;
+> mantén en Claude la orquestación, las decisiones ambiguas y el QA final. Todo motor externo
+> debe tener **fallback a Claude** si falla o agota timeout.
+
+### Motores y cuándo usarlos
+
+| Motor / modelo | Coste | Cuándo |
 |---|---|---|
-| **`haiku`** | Tareas mecánicas y deterministas | editar JSON/markdown, renombrar/mover/borrar archivos, formatear, extracción/búsqueda acotada, sincronizar tablas |
-| **`sonnet`** | Tareas con criterio o varios pasos | redactar/editar prosa, instalar/configurar con manejo de errores, refactors locales, clasificación por taxonomía, research acotado |
-| **`opus`** | Razonamiento difícil o QA crítico | diseño/arquitectura, verificación adversarial/escéptica final, síntesis de muchas fuentes, decisiones de alto impacto |
+| **Claude `haiku`** | plan | mecánico/determinista: editar JSON/markdown, mover/borrar archivos, formatear, extracción acotada |
+| **Claude `sonnet`** | plan | criterio o varios pasos: redactar prosa, refactors locales, clasificación, research acotado |
+| **Claude `opus`** | plan | razonamiento difícil o QA crítico: diseño/arquitectura, verificación adversarial, síntesis final |
+| **Codex CLI** `gpt-5.5` / `gpt-5.4` / `gpt-5.4-mini` | suscripción ChatGPT (0 tokens de plan) | coding y razonamiento, ecosistema OpenAI, análisis de repos. Modula el coste con el modelo (`mini` < `5.4` < `5.5`) y con `reasoning_effort` (`low`/`medium`/`high`/`xhigh`) |
+| **Gemini CLI** (default del CLI) | suscripción Google (0 tokens de plan) | grounding/búsqueda web nativa, contexto enorme, barridos amplios y papers |
+| **OpenRouter `:free`** (p. ej. `qwen/qwen3-coder:free`, `nvidia/nemotron-3-super-120b-a12b:free`, `openai/gpt-oss-120b:free`) | gratis (requiere `OPENROUTER_API_KEY`) | tareas auto-contenidas de alto volumen donde el rate-limit bajo y la variabilidad son aceptables; **siempre** con fallback a Claude |
 
-**Regla práctica:** el grueso del fan-out va en `haiku`; `sonnet` solo donde haga falta criterio;
-`opus` reservado a la fase de **verificación/síntesis** final. Si una tarea es ambigua entre dos
-niveles, prueba con el más barato y deja que la fase de verificación (`opus`) detecte fallos.
+### Cómo invocarlos en un workflow
+
+- **Claude**: nativo — `agent(prompt, { model: 'haiku' | 'sonnet' | 'opus', schema })`.
+- **Codex / Gemini / OpenRouter**: vía el agente puente — `agent(prompt, { agentType: 'engine-runner', schema })`,
+  indicando el `ENGINE` y el encargo auto-contenido. El puente lee `pipeline/model-routing.yaml`
+  (fuente de verdad: `invoke`, `model`, `reasoning_effort`, `strengths`) y estructura la salida.
+  **No** mezcles `stderr` con `stdout` al capturar (los CLIs imprimen banners que rompen el JSON);
+  usa la salida JSON nativa cuando exista (`gemini -o json`).
+
+**Regla práctica:** el grueso del fan-out va a CLIs de suscripción / OpenRouter free o a `haiku`;
+`sonnet` donde haga falta criterio; `opus` reservado a verificación/síntesis. Ante la duda, prueba
+el motor más barato y deja que la fase de verificación (`opus`) detecte fallos.
 
 ## Build & Test
 
