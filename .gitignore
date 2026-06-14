@@ -18,8 +18,14 @@ desktop.ini
 
 # Claude Code (config local de máquina)
 .claude/settings.local.json
+.claude/worktrees/
+
+# Directorios temporales de agentes y herramientas
+.tmp/
+.tmp-*/
 
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db
 .beads-credential-key
+.beads/.~*

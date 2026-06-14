@@ -1,88 +1,89 @@
-# AI Brain 🧠
+# AI Brain
 
-Cerebro diario de novedades de IA para desarrolladores. Cada día rastrea modelos nuevos,
-herramientas, plugins, harness, funcionalidades, skills, rules, MCP servers y papers; los
-documenta en un **vault de Obsidian** con etiquetado fuerte; y los expone como un
-**knowledge graph consultable** vía [graphify](https://github.com/safishamsi/graphify).
+Base de conocimiento viva sobre IA para desarrollo de software. El proyecto captura novedades,
+las normaliza con una taxonomía controlada, las publica en un vault de Obsidian y genera un grafo
+consultable por agentes mediante graphify.
 
-**Objetivo práctico:** cuando vayas a mejorar un proyecto, preguntarle al cerebro
-*"¿cuál es la mejor opción para X hoy?"* y obtener una respuesta fundamentada en todo lo capturado.
+## Flujo principal
 
-## Arquitectura
-
-```
-Fuentes web ─► [Fase 1: Research] ─► [Fase 2: Análisis + Etiquetado] ─► [Fase 3: Documentación]
-                                                                              │
-                                                  scripts/rebuild-graph.ps1 ──┤
-                                                                              ▼
-                                          Obsidian (legible)  +  graphify MCP (consultable por IA)
+```text
+Fuentes -> research -> triage y taxonomía -> vault de Obsidian -> grafo consultable
 ```
 
-El barrido se corre **local en sesión interactiva** (`/ai-news-pipeline`, manual o vía `/loop`),
-para no consumir crédito de Agent SDK. Luego graphify reconstruye el grafo a partir del vault.
+La captura diaria se ejecuta en una sesión interactiva. El contenido estable vive en `vault/`;
+la configuración y los contratos del pipeline viven en `pipeline/`; los artefactos de graphify
+son regenerables y no se versionan.
 
-## Estructura
+## Inicio rápido
 
-| Carpeta | Contenido |
-|---|---|
-| `vault/00_Inbox/` | Capturas crudas del día (cobertura amplia) |
-| `vault/10_Daily/` | Nota índice diaria `YYYY-MM-DD.md` |
-| `vault/20_Items/` | Una nota por novedad — el grueso del cerebro |
-| `vault/30_MOC/` | Maps of Content (índices vivos por categoría) |
-| `vault/40_Foundations/` | Capa evergreen: fundamentos conceptuales (qué es IA/LLM/agente/MCP/RAG/harness, glosario) |
-| `vault/_templates/` | Plantillas de nota |
-| `vault/_taxonomy.md` | Espejo navegable de la taxonomía (fuente de verdad: pipeline/taxonomy.yaml) |
-| `pipeline/` | `taxonomy.yaml`, `sources.yaml`, `schema.md` (config del pipeline) |
-| `scripts/` | `rebuild-graph.ps1` + `MCP-SETUP.md` (integración graphify) |
-| `vault/graphify-out/` | Outputs de graphify (`graph.json`/`.html`, `GRAPH_REPORT.md`) — regenerable, gitignored |
-| `.mcp.json` | Registra el server MCP `graphify` para consultar el cerebro |
-| `.claude/skills/ai-news-pipeline/` | La skill del pipeline de 3 fases |
+1. Abre `vault/` como vault de Obsidian.
+2. Ejecuta la skill `ai-news-pipeline` desde un cliente compatible para generar la captura diaria.
+3. Revisa la nota de `vault/10_Daily/` y los items creados en `vault/20_Items/`.
+4. Reconstruye el grafo cuando quieras actualizar la capa consultable:
 
-## Uso — operación local (sin Agent SDK)
-
-El barrido corre en **sesión interactiva** de Claude Code, no headless. Así se cobra contra los
-límites normales del plan y **no consume el crédito de Agent SDK** (a diferencia de `/schedule`
-en la nube o de `claude -p` en una Tarea Programada, que sí lo consumen).
-
-### Barrido diario (manual, recomendado)
-En una sesión de Claude Code dentro de este directorio, una vez al día:
-```
-/ai-news-pipeline
-```
-y al terminar, reconstruye el grafo:
 ```powershell
+$env:OPENROUTER_API_KEY = '...'
 ./scripts/rebuild-graph.ps1
 ```
 
-### Semi-automático con /loop (opcional)
-Si dejas una sesión de Claude Code abierta, puedes dispararlo en intervalo:
+La variable solo necesita existir en la sesión que construye el grafo. No se guarda ninguna clave
+en el repositorio.
+
+## Estructura
+
+| Ruta | Responsabilidad |
+|---|---|
+| `vault/` | Base de conocimiento legible en Obsidian |
+| `pipeline/` | Fuentes de verdad para esquema, taxonomía, fuentes y routing |
+| `scripts/` | Automatización local y comprobaciones del repositorio |
+| `docs/` | Arquitectura, operación e integraciones |
+| `.claude/` | Agentes, skills y workflows del adaptador de Claude Code |
+| `.mcp.json` | Configuración del MCP de graphify para el proyecto |
+| `.beads/` | Metadatos del issue tracker `bd`; no es contenido del cerebro |
+
+Consulta los mapas específicos de [vault](vault/README.md), [pipeline](pipeline/README.md) y
+[scripts](scripts/README.md).
+
+## Fuentes de verdad
+
+| Tema | Archivo canónico |
+|---|---|
+| Facetas y valores permitidos | `pipeline/taxonomy.yaml` |
+| Frontmatter y forma de las notas | `pipeline/schema.md` |
+| Fuentes y ventana de captura | `pipeline/sources.yaml` |
+| Motores y reglas de routing | `pipeline/model-routing.yaml` |
+| Contenido curado | `vault/20_Items/` |
+| Salida diaria | `vault/10_Daily/` |
+
+Evita duplicar estas reglas en prompts o documentación. Los adaptadores deben leer los archivos
+canónicos en tiempo de ejecución.
+
+## Operaciones comunes
+
+```powershell
+# Comprobar estructura y enlaces internos
+./scripts/check-repo.ps1
+
+# Reconstruir el knowledge graph
+./scripts/rebuild-graph.ps1
+
+# Consultar trabajo disponible
+bd ready
 ```
-/loop 24h /ai-news-pipeline
-```
-Requiere la terminal abierta; sigue usando límites interactivos (no Agent SDK).
 
-### Consultar el cerebro
-Tras reconstruir el grafo, pregunta en lenguaje natural en una sesión dentro de `ai-brain/`;
-el modelo usará el MCP server de graphify (`query_graph`) sobre tus notas. Ver
-[`scripts/MCP-SETUP.md`](scripts/MCP-SETUP.md).
+## Documentación
 
-## Prerequisito: graphify + backend (ya configurado)
+- [Arquitectura](docs/ARCHITECTURE.md)
+- [Operación diaria](docs/OPERATIONS.md)
+- [Graphify y MCP](docs/GRAPHIFY.md)
+- [Routing de modelos](docs/MODEL-ROUTING.md)
+- [Fuentes y scouts](docs/SOURCES.md)
+- [Cómo contribuir](CONTRIBUTING.md)
 
-```bash
-uv tool install "graphifyy[openai]"   # el extra [openai] habilita backends OpenAI-compatibles
-```
+## Principios
 
-**Backend de construcción:** OpenRouter con **Gemma 4 31B (free)**, registrado como custom
-provider en `~/.graphify/providers.json` (clave `openrouter`). Coste de construcción: $0.
-Requiere `OPENROUTER_API_KEY`. Está **persistida como variable de entorno de usuario** en
-Windows (`[Environment]::SetEnvironmentVariable('OPENROUTER_API_KEY', ..., 'User')`), así que
-las sesiones nuevas ya la heredan sin definirla a mano; consíguela en
-[openrouter.ai/keys](https://openrouter.ai/keys). Posible 429 rate-limit en el etiquetado
-de comunidades con el modelo free — el grafo base se genera igual. Ver
-[github.com/safishamsi/graphify](https://github.com/safishamsi/graphify).
-
-## Etiquetado
-
-Todo el etiquetado usa el **vocabulario controlado** de `pipeline/taxonomy.yaml`
-(facetas: `type`, `vendor`, `domain`, `ecosystem`, `maturity`, `source_type`, `relevance`).
-El pipeline no inventa tags: si algo no encaja, lo registra como candidato a nuevo término.
+- La taxonomía es un contrato, no una sugerencia.
+- Actualizar una nota existente es preferible a crear un duplicado.
+- El vault es la fuente humana; el grafo es una proyección regenerable.
+- Los secretos y el estado local nunca se versionan.
+- Los cambios de trabajo se registran con `bd`.

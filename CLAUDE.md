@@ -86,7 +86,7 @@ Claude para lo crítico. Fija el motor/modelo de forma explícita — no dejes e
   indicando el `ENGINE` y el encargo auto-contenido. El puente lee `pipeline/model-routing.yaml`
   (fuente de verdad: `invoke`, `model`, `reasoning_effort`, `strengths`) y estructura la salida.
   **No** mezcles `stderr` con `stdout` al capturar (los CLIs imprimen banners que rompen el JSON);
-  usa la salida JSON nativa cuando exista (`gemini -o json`).
+  para Gemini no uses `-o json`, porque en el entorno actual puede bloquear el CLI.
 
 **Regla práctica:** el grueso del fan-out va a CLIs de suscripción / OpenRouter free o a `haiku`;
 `sonnet` donde haga falta criterio; `opus` reservado a verificación/síntesis. Ante la duda, prueba
@@ -94,18 +94,19 @@ el motor más barato y deja que la fase de verificación (`opus`) detecte fallos
 
 ## Build & Test
 
-_Add your build and test commands here_
-
-```bash
-# Example:
-# npm install
-# npm test
+```powershell
+./scripts/check-repo.ps1
 ```
 
 ## Architecture Overview
 
-_Add a brief overview of your project architecture_
+El producto principal es `vault/`. Los contratos compartidos viven en `pipeline/`, la
+automatización local en `scripts/` y la explicación del sistema en `docs/`. Lee
+`docs/ARCHITECTURE.md` antes de cambiar límites entre estas capas.
 
 ## Conventions & Patterns
 
-_Add your project-specific conventions here_
+- `pipeline/taxonomy.yaml` y `pipeline/schema.md` son contratos canónicos.
+- `vault/graphify-out/`, worktrees y temporales son regenerables y no se versionan.
+- Mantén las guías largas en `docs/` y el README como puerta de entrada.
+- Registra y cierra todo trabajo con `bd`.

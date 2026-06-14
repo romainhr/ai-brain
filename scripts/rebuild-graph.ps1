@@ -104,4 +104,4 @@ $report= Join-Path $OutDir 'GRAPH_REPORT.md'
 if (Test-Path $graph)  { Write-Host "  graph.json:      $graph" -ForegroundColor Green }
 if (Test-Path $html)   { Write-Host "  Visualización:   $html" -ForegroundColor Green }
 if (Test-Path $report) { Write-Host "  Reporte:         $report" -ForegroundColor Green }
-Write-Host "  Consulta el cerebro vía el MCP server de graphify (ver scripts/MCP-SETUP.md)." -ForegroundColor DarkGray
+Write-Host "  Consulta el cerebro vía el MCP server de graphify (ver docs/GRAPHIFY.md)." -ForegroundColor DarkGray

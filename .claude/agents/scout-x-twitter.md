@@ -36,7 +36,7 @@ devolverlas como hallazgos estructurados con URL real y fecha verificada.
 
 > Si `X_BEARER_TOKEN` no está pero el usuario quiere conexión robusta, díselo en una nota: con la
 > API la verificación de fecha es exacta; sin ella, X limita el scraping y algunas fechas quedan
-> "unknown". Ver `scripts/SCOUTS-SETUP.md`.
+> "unknown". Ver `docs/SOURCES.md`.
 
 ## A quién consultar (cuentas de alta señal)
 

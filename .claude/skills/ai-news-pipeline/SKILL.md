@@ -116,7 +116,7 @@ refrescar el grafo consultable.
 ## Enrutamiento de modelos (Claude / Codex / Gemini)
 
 El workflow asigna **dinámicamente** el motor de mayor calidad a cada tarea. Config y fuente de
-verdad: `pipeline/model-routing.yaml`. Detalle de conexión: `scripts/MODEL-ROUTING.md`.
+verdad: `pipeline/model-routing.yaml`. Detalle de conexión: `docs/MODEL-ROUTING.md`.
 
 - **Motores:** `claude-opus`, `claude-sonnet` (nativos), `codex` (GPT, CLI `codex exec`) y
   `gemini` (CLI `gemini -p`). Los dos externos usan suscripción local (ChatGPT / Google OAuth).

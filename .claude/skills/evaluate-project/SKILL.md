@@ -22,7 +22,7 @@ por la ruta antes de continuar; no asumas el directorio actual (el cwd suele ser
 ## Rutas (relativas a la raíz de `ai-brain/`)
 - Cerebro consultable: MCP server **`graphify`** (tools `query_graph`, `path`, `explain`).
 - Taxonomía del cerebro: `vault/_taxonomy.md` (facetas con las que casan los tags de las notas).
-- Setup del MCP / grafo: `scripts/MCP-SETUP.md`, `scripts/rebuild-graph.ps1`.
+- Setup del MCP / grafo: `docs/GRAPHIFY.md`, `scripts/rebuild-graph.ps1`.
 - Workflow de fan-out (repos grandes): `.claude/workflows/evaluate-project.js`.
 - Plantilla del deck: `.claude/skills/evaluate-project/deck-template.html`.
 
@@ -44,7 +44,7 @@ El cerebro se consulta **solo vía MCP graphify**. Antes de nada:
      > El cerebro no está disponible. Levántalo antes de evaluar:
      > `./scripts/rebuild-graph.ps1` (reconstruye `vault/graphify-out/graph.json`) y registra el
      > MCP (`claude mcp add graphify -- graphify-mcp vault/graphify-out/graph.json`). Ver
-     > `scripts/MCP-SETUP.md`. Reinicia la sesión y vuelve a ejecutar `/evaluate-project`.
+     > `docs/GRAPHIFY.md`. Reinicia la sesión y vuelve a ejecutar `/evaluate-project`.
 2. Resuelve la **ruta del proyecto** (`$ARGUMENTS`) y verifica que existe. Determina la **fecha de
    hoy** (`YYYY-MM-DD`) para la portada del deck.
 3. Estima el **tamaño** del proyecto (nº de archivos relevantes). Si es grande (muchos directorios
