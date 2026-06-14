@@ -1,1 +1,8 @@
-{}
+{
+  "accentColor": "#2aa198",
+  "baseFontSize": 16,
+  "enabledCssSnippets": [
+    "ai-brain"
+  ],
+  "theme": "system"
+}
