@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!--
+  PLANTILLA DEL DECK DE EVALUACIÓN — AI Brain / evaluate-project
+  =============================================================
+  Autocontenida (CSS inline, sin CDN) para abrirse offline desde <repo>/ai-brain-evaluation/index.html.
+
+  Cómo rellenarla desde DECK_DATA (objeto del workflow o de la Fase 3 de la skill):
+    {{PROJECT_NAME}}  -> project_name
+    {{DATE}}          -> date (YYYY-MM-DD)
+    {{COUNT_P0/1/2}}  -> nº de recommendations por prioridad
+    Perfil   -> una <tr> por entry de `profile`  (axis, value, evidence)
+    Matriz   -> una <tr> por entry de `matrix`    (axis, actual, recomendado, veredicto -> clase css v-*)
+    Fortalezas/Gaps -> un <li> por string de `strengths` / `gaps`
+    Recos    -> una <article class="reco"> por entry de `recommendations` (ver bloque de ejemplo)
+                cada fuente -> <a href="{url}">{nota}</a> con chips de maturity/relevance
+    Roadmap  -> un <li> por string de `roadmap`
+  Borra los bloques de ejemplo (marcados <!-- EJEMPLO -->) tras poblar los reales.
+  Veredicto -> clase: al-dia=v-ok, mejorable=v-warn, obsoleto=v-bad, sin-datos=v-none.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluación · {{PROJECT_NAME}}</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#171a23; --panel2:#1e2230; --line:#2a2f40;
+    --ink:#e7e9ee; --muted:#9aa3b2; --accent:#6ea8fe; --accent2:#7ee0c0;
+    --ok:#3ecf8e; --warn:#f0b429; --bad:#f06363; --none:#6b7280;
+    --p0:#f06363; --p1:#f0b429; --p2:#6ea8fe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 24px 80px}
+  header.cover{padding:48px 36px;border-radius:18px;border:1px solid var(--line);
+    background:linear-gradient(135deg,#1b2030,#141826);margin-bottom:28px}
+  header.cover .eyebrow{color:var(--accent2);font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;font-size:12px}
+  header.cover h1{margin:.25em 0 .1em;font-size:34px;line-height:1.15}
+  header.cover .meta{color:var(--muted);font-size:14px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;margin:18px 0}
+  section h2{margin:0 0 14px;font-size:19px;display:flex;align-items:center;gap:9px}
+  section h2 .ico{font-size:20px}
+  .stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+    padding:12px 16px;min-width:96px}
+  .stat b{display:block;font-size:24px} .stat span{color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  td code{background:var(--panel2);padding:1px 6px;border-radius:5px;color:var(--accent2);font-size:13px}
+  .verdict{font-weight:600;font-size:12px;padding:3px 9px;border-radius:20px;white-space:nowrap}
+  .v-ok{background:rgba(62,207,142,.15);color:var(--ok)}
+  .v-warn{background:rgba(240,180,41,.15);color:var(--warn)}
+  .v-bad{background:rgba(240,99,99,.15);color:var(--bad)}
+  .v-none{background:rgba(107,114,128,.18);color:#aab2c0}
+  ul.clean{margin:0;padding-left:20px} ul.clean li{margin:6px 0}
+  .reco{background:var(--panel2);border:1px solid var(--line);border-left-width:4px;
+    border-radius:10px;padding:16px 18px;margin:12px 0}
+  .reco.p-P0{border-left-color:var(--p0)} .reco.p-P1{border-left-color:var(--p1)}
+  .reco.p-P2{border-left-color:var(--p2)}
+  .reco .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .pill{font-weight:700;font-size:11px;padding:2px 9px;border-radius:6px}
+  .pill.P0{background:var(--p0);color:#1a0d0d} .pill.P1{background:var(--p1);color:#241c05}
+  .pill.P2{background:var(--p2);color:#0b1426}
+  .reco .axis{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  .reco h3{margin:2px 0 6px;font-size:16px}
+  .reco p{margin:6px 0;color:#cdd3de}
+  .sources{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .sources a{color:var(--accent);text-decoration:none}
+  .sources a:hover{text-decoration:underline}
+  .chip{font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);
+    border-radius:20px;padding:1px 8px;margin-left:6px}
+  ol.roadmap{margin:0;padding-left:22px} ol.roadmap li{margin:8px 0}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:34px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AI Brain · Evaluación de stack agéntico</div>
+    <h1>{{PROJECT_NAME}}</h1>
+    <div class="meta">Evaluado el {{DATE}} · recomendaciones fundamentadas en el cerebro de IA</div>
+    <div class="stats">
+      <div class="stat"><b>{{COUNT_P0}}</b><span>P0 · críticas</span></div>
+      <div class="stat"><b>{{COUNT_P1}}</b><span>P1 · importantes</span></div>
+      <div class="stat"><b>{{COUNT_P2}}</b><span>P2 · oportunas</span></div>
+    </div>
+  </header>
+
+  <section>
+    <h2><span class="ico">🧩</span> Perfil del stack de IA</h2>
+    <table>
+      <thead><tr><th>Eje</th><th>En uso</th><th>Evidencia</th></tr></thead>
+      <tbody>
+        <!-- EJEMPLO --><tr><td><b>harness</b></td><td>Claude Code</td><td><code>CLAUDE.md</code>, <code>.claude/</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="ico">📊</span> Matriz de evaluación</h2>
+    <table>
+      <thead><tr><th>Eje</th><th>Actual</th><th>Recomendado (cerebro)</th><th>Veredicto</th></tr></thead>
+      <tbody>
+        <!-- EJEMPLO --><tr><td><b>model</b></td><td>claude-opus-4-6</td><td>claude-opus-4-8</td><td><span class="verdict v-warn">mejorable</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="ico">✅</span> Fortalezas</h2>
+    <ul class="clean">
+      <!-- EJEMPLO --><li>Harness y patrones agénticos alineados con lo último capturado.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="ico">⚠️</span> Gaps y deudas</h2>
+    <ul class="clean">
+      <!-- EJEMPLO --><li>Modelo una versión por detrás del recomendado.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="ico">🎯</span> Recomendaciones priorizadas</h2>
+
+    <!-- EJEMPLO de una recomendación; repetir <article> por cada entry de recommendations -->
+    <article class="reco p-P0">
+      <div class="head">
+        <span class="pill P0">P0</span>
+        <span class="axis">model</span>
+      </div>
+      <h3>Actualizar al modelo recomendado</h3>
+      <p><b>Acción:</b> migrar la config del modelo a la versión vigente.</p>
+      <p><b>Por qué:</b> mejor capacidad de razonamiento agéntico; la versión actual quedó atrás.</p>
+      <div class="sources">
+        <a href="https://ejemplo">Nota del cerebro<span class="chip">ga</span><span class="chip">core</span></a>
+      </div>
+    </article>
+
+  </section>
+
+  <section>
+    <h2><span class="ico">🛣️</span> Roadmap sugerido</h2>
+    <ol class="roadmap">
+      <!-- EJEMPLO --><li>Actualizar el modelo (P0).</li>
+    </ol>
+  </section>
+
+  <footer>
+    Generado por <code>/evaluate-project</code> (AI Brain). Las recomendaciones reflejan el estado del
+    cerebro a la fecha indicada; reconstruye el grafo tras cada barrido para mantenerlas al día.
+  </footer>
+
+</div>
+</body>
+</html>
