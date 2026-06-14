@@ -46,6 +46,9 @@ El barrido se reparte entre **8 agentes expertos de plataforma**, definidos en
 
 **Forma recomendada (workflow):** lanza el workflow `ai-news-pipeline` (`/workflows`), que hace el
 fan-out por estos expertos en paralelo vía `agentType` y devuelve los hallazgos ya en esquema.
+El workflow incluye **enrutamiento dinámico de modelo**: antes de cada fase, un router asigna a
+cada scout y a cada hallazgo el motor de mayor calidad entre Claude (Opus/Sonnet), Codex (GPT) y
+Gemini. Ver `## Enrutamiento de modelos` más abajo y `pipeline/model-routing.yaml`.
 
 **Forma manual (sesión interactiva, sin workflow):** invoca cada experto con la tool `Agent`
 (`subagent_type: scout-<nombre>`), pasándole la fecha de hoy y la ventana. Si prefieres no
@@ -110,8 +113,27 @@ Imprime: fecha, nº hallazgos crudos, notas nuevas/actualizadas, candidatos a ta
 ruta de la nota diaria. Recuerda al usuario que puede correr `scripts/rebuild-graph.ps1` para
 refrescar el grafo consultable.
 
+## Enrutamiento de modelos (Claude / Codex / Gemini)
+
+El workflow asigna **dinámicamente** el motor de mayor calidad a cada tarea. Config y fuente de
+verdad: `pipeline/model-routing.yaml`. Detalle de conexión: `scripts/MODEL-ROUTING.md`.
+
+- **Motores:** `claude-opus`, `claude-sonnet` (nativos), `codex` (GPT, CLI `codex exec`) y
+  `gemini` (CLI `gemini -p`). Los dos externos usan suscripción local (ChatGPT / Google OAuth).
+- **Cómo funciona:** una fase **Routing** ejecuta un agente *router* que lee
+  `model-routing.yaml` (fortalezas + `routing_hints`) y decide el motor de cada scout (research) y
+  de cada hallazgo (triage). Los motores Claude corren nativos; Codex/Gemini corren vía el agente
+  puente `.claude/agents/engine-runner.md`, que los invoca por `Bash` dentro del repo (pueden leer
+  ellos mismos `sources.yaml`/`taxonomy.yaml`) y estructura su salida. Si un motor externo falla,
+  hay **fallback** automático a `claude-sonnet`.
+- **Forzar un motor (debug):** pasa `args.forceEngine` al workflow (p.ej. `"gemini"`) para saltar
+  el router y usar ese motor en todo.
+- **En sesión manual (sin workflow):** puedes delegar una sub-tarea a otro modelo con `Bash`:
+  `codex exec --skip-git-repo-check "<prompt>"` o `gemini -p "<prompt>"`.
+
 ## Principios
 - **Etiquetado fuerte y consistente** por encima de prosa. La taxonomía es ley.
 - **No duplicar.** Actualizar > recrear.
 - **Accionable.** Cada nota responde "¿cuándo me sirve esto para un proyecto?".
 - Verifica URLs reales; no inventes enlaces ni features.
+- **Modelo adecuado por tarea.** Deja que el router elija; ajusta `model-routing.yaml`, no el código.

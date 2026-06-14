@@ -1,0 +1,66 @@
+# Enrutamiento DINÁMICO de modelos para el ai-news-pipeline.
+# En cada corrida, un agente ROUTER lee esta config y asigna, por tarea (cada scout de
+# research y cada hallazgo de triage), el MOTOR de mayor CALIDAD. Es dinámico: el router
+# decide en runtime según la naturaleza real de la tarea/hallazgo de hoy.
+#
+# Mecanismo: los motores Claude corren nativos (agent + model). Los motores CLI externos
+# (codex, gemini) corren vía el agente puente `.claude/agents/engine-runner.md`, que los
+# invoca por Bash dentro del repo y estructura su salida. Como corren en el repo, los CLIs
+# externos pueden LEER ellos mismos sources.yaml / taxonomy.yaml / los .md de los scouts.
+
+version: 1
+
+default_engine: claude-sonnet
+fallback_engine: claude-sonnet      # si un motor externo falla o agota timeout, se reintenta aquí
+
+engines:
+
+  claude-opus:
+    kind: claude
+    model: opus
+    strengths: >
+      Mejor juicio y matiz, seguimiento estricto de instrucciones y taxonomía, síntesis y
+      desambiguación. Para clasificación fina/ambigua y verificación crítica.
+
+  claude-sonnet:
+    kind: claude
+    model: sonnet
+    strengths: >
+      Rápido y equilibrado, buen recall. Tools nativas de Claude Code (WebSearch, WebFetch,
+      gh vía Bash). Caballo de batalla por defecto.
+
+  codex:
+    kind: cli
+    command: codex
+    # El encargo se pasa por stdin; -m es opcional (vacío = default configurado en codex).
+    invoke: "codex exec --skip-git-repo-check"
+    model: ""                       # ej. gpt-5.1-codex / gpt-5.1 / o3 (déjalo vacío para usar tu default)
+    strengths: >
+      Fuerte en código y razonamiento; ecosistema OpenAI. Bueno para analizar repos, releases
+      de OpenAI/Codex y temas de ingeniería. Suscripción ChatGPT (sin coste por token).
+
+  gemini:
+    kind: cli
+    command: gemini
+    # El puente añade -p; --yolo evita prompts de aprobación en headless.
+    invoke: "gemini --yolo"
+    model: ""                       # ej. gemini-3-pro / gemini-2.5-pro (vacío = default)
+    strengths: >
+      Grounding/búsqueda web nativa y contexto enorme. Bueno para barridos amplios, Google/
+      DeepMind y lectura de papers. Suscripción Google (sin coste por token).
+
+# Pistas para el router (NO son reglas duras: el router decide con criterio de CALIDAD).
+routing_hints:
+  research:
+    - "scout-github depende de la CLI 'gh': prefiere claude-* (la tiene nativa) salvo razón fuerte."
+    - "scout-google-deepmind y scout-research encajan bien con gemini (grounding, contexto, papers)."
+    - "scout-openai encaja bien con codex (ecosistema OpenAI)."
+    - "scout-anthropic conviene en claude-* (conoce mejor Claude Code / el ecosistema)."
+    - "Si dudas o la verificación de fecha es delicada, usa claude-sonnet (fiable y nativo)."
+  triage:
+    - "Clasificación ambigua o de alto matiz -> claude-opus."
+    - "Papers -> gemini o claude-opus; herramientas/código u OpenAI -> codex."
+    - "Casos claros y rápidos -> claude-sonnet."
+
+# Para desactivar el enrutamiento y forzar todo a un motor (debug), el workflow acepta
+# args.forceEngine = "claude-sonnet" | "claude-opus" | "codex" | "gemini".
