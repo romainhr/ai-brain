@@ -37,5 +37,13 @@ latencia/coste). Contexto: la retirada fue global y no selectiva; además, Fable
 (30 días, hasta 2 años para contenido marcado) para sus clasificadores de seguridad, lo que ya había motivado
 restricciones internas en Microsoft. Conviene verificar el changelog de GitHub para futuras reactivaciones.
 
+**Actualización 2026-06-13:** La suspensión fue desencadenada por una **orden formal del gobierno de EEUU**
+de control de exportación que prohíbe el acceso a Fable 5 y Mythos 5 por parte de nacionales extranjeros.
+Amazon, en su rol simultáneo de inversor estratégico, cloud host (AWS Bedrock) y parte regulada, alertó
+sobre vulnerabilidades de ciberseguridad explotables en Fable 5 que aceleraron la decisión. El ciclo completo
+fue de 72 horas: lanzamiento el martes 9-jun → suspensión el viernes 12-jun.
+
 ## Enlaces
 - [Changelog de GitHub](https://github.blog/changelog/2026-06-09-claude-fable-5-is-generally-available-for-github-copilot/)
+- [Statement oficial Anthropic](https://www.anthropic.com/news/fable-mythos-access)
+- [Análisis Amazon como trigger del shutdown](https://www.techtimes.com/articles/318350/20260614/amazon-triggered-claude-fable-5-shutdown-investor-cloud-host-now-regulator.htm)

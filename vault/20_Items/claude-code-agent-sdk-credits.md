@@ -28,6 +28,10 @@ editan código, con el mismo loop y gestión de contexto de Claude Code (Python 
 Cualquier automatización headless (incluido el scheduled agent de este cerebro) consume este
 crédito. Conviene dimensionar la frecuencia/volumen del pipeline diario en consecuencia.
 
+**Activo desde 2026-06-15.** Los pools son: $20 en plan Pro, $100 en Max 5x, $200 en Max 20x.
+Si el pool se agota, el uso sigue a precios de API estándar. Auditar cuántos tokens consume
+el pipeline diario del AI Brain para prever el presupuesto mensual.
+
 ## Cómo se usa / requisitos
 Plan de suscripción con crédito de Agent SDK; SDK en Python o TypeScript. Ver overview oficial.
 

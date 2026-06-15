@@ -6,7 +6,7 @@ vendor: google
 domain: [coding, infra]
 ecosystem: [huggingface, ollama, standalone]
 maturity: preview
-source_type: community
+source_type: official
 relevance: watch
 url: https://gigazine.net/gsc_news/en/20260611-google-ai-diffusiongemma
 tags: [type/model, vendor/google, domain/coding, domain/infra, ecosystem/huggingface, ecosystem/ollama, ecosystem/standalone]
@@ -43,5 +43,7 @@ antes de producción; la ventaja de velocidad depende del hardware (cifras sobre
 puede requerir ajustes de prompting distintos a los de modelos autorregresivos.
 
 ## Enlaces
+- [Developer Guide oficial (Google Developers Blog)](https://developers.googleblog.com/diffusiongemma-the-developer-guide/)
+- [Guía NVIDIA para RTX locales](https://blogs.nvidia.com/blog/rtx-ai-garage-local-gemma-diffusion/)
 - [Cobertura Gigazine](https://gigazine.net/gsc_news/en/20260611-google-ai-diffusiongemma)
 - [MarkTechPost — anuncio](https://www.marktechpost.com/2026/06/10/google-ai-releases-diffusiongemma-a-26b-moe-open-model-using-text-diffusion-for-up-to-4x-faster-generation/)

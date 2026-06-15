@@ -98,3 +98,4 @@ facets:
 # Formato sugerido por entrada: "<faceta>: <término>  # primera vez visto YYYY-MM-DD, ejemplo"
 candidates:
   - "vendor: moonshot  # primera vez visto 2026-06-13, Kimi K2.7-Code (Moonshot AI). Usado 'community' provisionalmente."
+  - "vendor: xai  # primera vez visto 2026-06-15, Grok Build Plugin Marketplace + xAI STT API. Usado 'community' provisionalmente."
