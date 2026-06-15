@@ -2,7 +2,7 @@
 title: "Fundamentos — Índice"
 type: foundation
 status: evergreen
-updated: 2026-06-13
+updated: 2026-06-15
 tags: [foundation, moc]
 related: ["[[_Home]]"]
 ---
@@ -30,6 +30,10 @@ related: ["[[_Home]]"]
 ## Técnicas
 - [[tecnicas-clave]] — prompt vs. context engineering vs. fine-tuning.
 - [[que-es-rag]] — recuperación aumentada y GraphRAG.
+
+## Evaluación y patrones avanzados
+- [[evaluacion-de-modelos]] — benchmarks, evals y cómo leerlos críticamente.
+- [[patrones-de-agentes]] — patrones comunes en sistemas agénticos (ReAct, multi-agent, memoria…).
 
 ---
 *Cómo se relaciona con el resto:* las notas diarias (carpeta `10_Daily/`) capturan novedades del día; cada item
